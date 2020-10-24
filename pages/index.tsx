@@ -12,6 +12,7 @@ import {
 import { useHotkeys, useIsHotkeyPressed } from "react-hotkeys-hook";
 import useInterval from "use-interval";
 import { useState, useEffect } from "react";
+import { Line } from "rc-progress";
 
 // import create from "zustand";
 
@@ -61,7 +62,7 @@ const BaseStageTimes = {
  */
 
 const IndexPage = () => {
-  // const { colorMode, toggleColorMode } = useColorMode();
+  const { colorMode, toggleColorMode } = useColorMode();
 
   // <Layout title="Home | Next.js + TypeScript Example">
   //   <h1>Hello Next.js 👋</h1>
@@ -71,7 +72,7 @@ const IndexPage = () => {
   //     </Link>
   //   </p>
   // </Layout>
-  const MAG_MAX = 9;
+  const MAG_MAX = 30;
   const [count, setCount] = useState(0);
   const [inMag, setInMag] = useState(MAG_MAX);
   const [mags, setMags] = useState([MAG_MAX, MAG_MAX, MAG_MAX, MAG_MAX]);
@@ -83,14 +84,15 @@ const IndexPage = () => {
   };
 
   useHotkeys(
-    "ctrl+e",
+    "ctrl+r",
     preventDefaultWrap(() => setCount(1))
   );
+  const INTERVAL = 40;
   useInterval(() => {
-    if (isPressed("r") && !isPressed("ctrl")) {
-      addCount(1);
+    if (isPressed("e") && !isPressed("ctrl")) {
+      addCount((INTERVAL / 1000) * 100);
     }
-  }, 20);
+  }, INTERVAL);
 
   // useHotkeys(
   //   "r",
@@ -112,7 +114,9 @@ const IndexPage = () => {
   useEffect(() => {
     if (count >= 100) {
       setCount(0);
-      setInMag(MAG_MAX);
+      setMags((prev) => [...prev, inMag].sort().reverse());
+      // takes last mag
+      setInMag(mags.shift() as number);
       console.log("reloaded");
     }
     console.log(count);
@@ -130,14 +134,21 @@ const IndexPage = () => {
         Toggle {colorMode === "light" ? "Dark" : "Light"}
       </Button> */}
       <Text fontSize={30}>{inMag}</Text>
-      <Button colorScheme="teal" variant="outline" m={2}>
+      <Button
+        colorScheme="teal"
+        variant="outline"
+        m={2}
+        onClick={toggleColorMode}
+      >
         asdf
       </Button>
       <Button colorScheme="orange" variant="outline" m={2}>
         eeee
       </Button>
-      <Box maxWidth={300}>
-        <Progress colorScheme="green" height="32px" value={count} />
+      <Box maxWidth={200}>
+        {/* the chakra UI default progress bar is very jumpy, not smooth */}
+        {/* <Progress colorScheme="green" height="32px" value={count} /> */}
+        <Line percent={count} strokeWidth={8} strokeColor="#D3D3D3" />
         <Text>{count}</Text>
       </Box>
       <Flex>
