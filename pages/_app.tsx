@@ -1,3 +1,9 @@
+/**
+ * Need to add this file to initiate ChakraUI
+ *
+ *
+ */
+
 import { ChakraProvider } from "@chakra-ui/core";
 
 import theme from "../theme";

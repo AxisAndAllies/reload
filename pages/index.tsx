@@ -9,7 +9,8 @@ import {
   Tag,
   useColorMode,
 } from "@chakra-ui/core";
-import { useHotkeys } from "react-hotkeys-hook";
+import { useHotkeys, useIsHotkeyPressed } from "react-hotkeys-hook";
+import useInterval from "use-interval";
 import { useState, useEffect } from "react";
 
 // import create from "zustand";
@@ -33,7 +34,35 @@ const preventDefaultWrap = (fn: () => void) => (event: KeyboardEvent) => {
   event.preventDefault();
 };
 
+const ReloadStages = {
+  PICK_NEW: "PICK_NEW",
+  EJECT_OLD: "EJECT_OLD",
+  TAKE_OUT_OLD: "TAKE_OUT_OLD",
+  PUT_IN_NEW: "PUT_IN_NEW",
+  STORE_OLD: "STORE_OLD",
+  SLIDE_ACTION: "SLIDE_ACTION",
+};
+
+const BaseStageTimes = {
+  PICK_NEW: 600,
+  EJECT_OLD: 300,
+  TAKE_OUT_OLD: 800,
+  PUT_IN_NEW: 1000,
+  STORE_OLD: 500,
+  SLIDE_ACTION: 500,
+};
+
+/**
+ *
+ * tactical reload = pick new + take out old + put in new + store old = 600+800+1000+500 =2900
+ * speed reload = pick new + eject old + put in new = 600+300+1000 = 1800
+ * NOTE: having no round in chamber (totally empty) requires you to slide action, adding 500 ms
+ *
+ */
+
 const IndexPage = () => {
+  // const { colorMode, toggleColorMode } = useColorMode();
+
   // <Layout title="Home | Next.js + TypeScript Example">
   //   <h1>Hello Next.js 👋</h1>
   //   <p>
@@ -47,7 +76,38 @@ const IndexPage = () => {
   const [inMag, setInMag] = useState(MAG_MAX);
   const [mags, setMags] = useState([MAG_MAX, MAG_MAX, MAG_MAX, MAG_MAX]);
 
-  const { colorMode, toggleColorMode } = useColorMode();
+  const isPressed = useIsHotkeyPressed();
+
+  const addCount = (add: number) => {
+    setCount((prev) => (prev > 0 ? prev + add : prev));
+  };
+
+  useHotkeys(
+    "ctrl+e",
+    preventDefaultWrap(() => setCount(1))
+  );
+  useInterval(() => {
+    if (isPressed("r") && !isPressed("ctrl")) {
+      addCount(1);
+    }
+  }, 20);
+
+  // useHotkeys(
+  //   "r",
+  //   preventDefaultWrap(() => addCount(1)),
+  //   downOnly
+  // );
+
+  // useHotkeys(
+  //   "ctrl+t",
+  //   preventDefaultWrap(() => setCount(0)),
+  //   downOnly
+  // );
+  useHotkeys(
+    "space",
+    preventDefaultWrap(() => setInMag((prev) => Math.max(prev - 1, 0))),
+    downOnly
+  );
 
   useEffect(() => {
     if (count >= 100) {
@@ -64,36 +124,11 @@ const IndexPage = () => {
     }
   }, [inMag]);
 
-  const addCount = (add: number) => {
-    setCount((prev) => prev + add);
-  };
-
-  useHotkeys(
-    "r",
-    preventDefaultWrap(() => addCount(10)),
-    upOnly
-  );
-  useHotkeys(
-    "ctrl+r",
-    preventDefaultWrap(() => addCount(1)),
-    downOnly
-  );
-
-  useHotkeys(
-    "ctrl+e",
-    preventDefaultWrap(() => setCount(0)),
-    downOnly
-  );
-  useHotkeys(
-    "space",
-    preventDefaultWrap(() => setInMag((prev) => Math.max(prev - 1, 0))),
-    downOnly
-  );
   return (
     <Box m={10}>
-      <Button onClick={toggleColorMode}>
+      {/* <Button onClick={toggleColorMode}>
         Toggle {colorMode === "light" ? "Dark" : "Light"}
-      </Button>
+      </Button> */}
       <Text fontSize={30}>{inMag}</Text>
       <Button colorScheme="teal" variant="outline" m={2}>
         asdf
@@ -103,6 +138,7 @@ const IndexPage = () => {
       </Button>
       <Box maxWidth={300}>
         <Progress colorScheme="green" height="32px" value={count} />
+        <Text>{count}</Text>
       </Box>
       <Flex>
         {mags.map((mag) => (
